@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 from pathlib import Path
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -20,12 +21,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-k5w3!%9i_%x7go_0j!!02=(qmc$8kk47lgs)0x86ta4r!sr21)'
+SECRET_KEY = os.environ.get('SECRET_KEY', 'default-insecure-key')
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+EBUG = bool(os.environ.get('DEBUG', True))
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', '').split(',')
 
 
 # Application definition
@@ -72,12 +73,31 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+POSTGRES_DB = os.environ.get('POSTGRES_DB')
+POSTGRES_USER = os.environ.get('POSTGRES_USER')
+POSTGRES_PASSWORD = os.environ.get('POSTGRES_PASSWORD')
+POSTGRES_HOST = os.environ.get('POSTGRES_HOST')
+POSTGRES_PORT = os.environ.get('POSTGRES_PORT')
+
+if all([POSTGRES_DB, POSTGRES_USER, POSTGRES_PASSWORD, POSTGRES_HOST]):
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': POSTGRES_DB,
+            'USER': POSTGRES_USER,
+            'PASSWORD': POSTGRES_PASSWORD,
+            'HOST': POSTGRES_HOST,
+            'PORT': POSTGRES_PORT,
+        }
     }
-}
+else:
+    # Fallback для запуска без докера (просто python manage.py runserver)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation
