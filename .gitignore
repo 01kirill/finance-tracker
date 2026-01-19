@@ -1,0 +1,16 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Node
+node_modules/
+dist/
+.DS_Store
+
+# JetBrains
+.idea/
+
+# Docker
+.pytest_cache/
