@@ -1,10 +1,24 @@
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import './index.css'
+import React from 'react'
+import ReactDOM from 'react-dom/client'
+import { MantineProvider, createTheme } from '@mantine/core';
+import { BrowserRouter } from 'react-router-dom';
 import App from './App.tsx'
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <App />
-  </StrictMode>,
+import '@mantine/core/styles.css';
+
+const theme = createTheme({
+  primaryColor: 'teal',
+  colors: {
+  },
+  fontFamily: 'Open Sans, sans-serif',
+});
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <MantineProvider theme={theme}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </MantineProvider>
+  </React.StrictMode>,
 )
