@@ -1,4 +1,5 @@
 import { Container, Title, Text, Button, Group, Paper } from '@mantine/core';
+import { Link } from 'react-router-dom';
 
 export function Home() {
   return (
@@ -14,7 +15,9 @@ export function Home() {
         </Text>
 
         <Group justify="center" mt="xl">
-          <Button size="lg" color="teal">Войти</Button>
+          <Button component={Link} to="/login" size="lg" color="teal">
+            Войти
+          </Button>
           <Button size="lg" variant="outline" color="yellow">Регистрация</Button>
         </Group>
       </Paper>
