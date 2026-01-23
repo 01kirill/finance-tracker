@@ -20,13 +20,13 @@ services:
     image: redis:7-alpine
     restart: always
     ports:
-      - "6379:6379"
+      - "6378:6379"
 
   mailhog:
     image: mailhog/mailhog
     ports:
-      - "1025:1025" # Порт для SMTP (куда шлет Django)
-      - "8025:8025" # Веб-интерфейс (куда смотришь ты)
+      - "1025:1025"
+      - "8025:8025"
 
   backend:
     build:
