@@ -18,7 +18,9 @@ export function Home() {
           <Button component={Link} to="/login" size="lg" color="teal">
             Войти
           </Button>
-          <Button size="lg" variant="outline" color="yellow">Регистрация</Button>
+          <Button component={Link} to="/register" size="lg" variant="outline" color="yellow">
+            Регистрация
+          </Button>
         </Group>
       </Paper>
     </Container>

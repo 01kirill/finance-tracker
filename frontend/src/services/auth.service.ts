@@ -21,6 +21,10 @@ export const authService = {
     return response.data;
   },
 
+  async activate(uid: string, token: string) {
+    await api.post('/auth/users/activation/', { uid, token });
+  },
+
   logout() {
     localStorage.removeItem('accessToken');
     localStorage.removeItem('refreshToken');
