@@ -8,3 +8,5 @@ sqlparse==0.5.5
 djoser
 djangorestframework-simplejwt
 drf-spectacular
+celery
+redis
