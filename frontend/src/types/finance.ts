@@ -17,8 +17,8 @@ export interface Transaction {
   amount: string;
   date: string;
   description: string;
-  wallet: number;
-  category: number | null;
+  wallet: Wallet;
+  category: Category | null;
   created_at: string;
 }
 

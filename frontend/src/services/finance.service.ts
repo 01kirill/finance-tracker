@@ -12,9 +12,27 @@ export const financeService = {
     return response.data;
   },
 
+  async updateWallet(id: number, name: string) {
+    const response = await api.patch<Wallet>(`/finance/wallets/${id}/`, { name });
+    return response.data;
+  },
+
+  async deleteWallet(id: number) {
+    await api.delete(`/finance/wallets/${id}/`);
+  },
+
   async getTransactions() {
     const response = await api.get<Transaction[]>('/finance/transactions/');
     return response.data;
+  },
+
+  async createTransaction(data: any) {
+    const response = await api.post<Transaction>('/finance/transactions/', data);
+    return response.data;
+  },
+
+  async deleteTransaction(id: number) {
+    await api.delete(`/finance/transactions/${id}/`);
   },
 
   async getCategories() {
@@ -27,9 +45,13 @@ export const financeService = {
     return response.data;
   },
 
-  async createTransaction(data: any) {
-    const response = await api.post<Transaction>('/finance/transactions/', data);
+  async updateCategory(id: number, title: string) {
+    const response = await api.patch<Category>(`/finance/categories/${id}/`, { title });
     return response.data;
-  }
+  },
+
+  async deleteCategory(id: number) {
+    await api.delete(`/finance/categories/${id}/`);
+  },
 
 };
