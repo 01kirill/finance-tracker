@@ -27,4 +27,9 @@ export const financeService = {
     return response.data;
   },
 
+  async createTransaction(data: any) {
+    const response = await api.post<Transaction>('/finance/transactions/', data);
+    return response.data;
+  }
+
 };
