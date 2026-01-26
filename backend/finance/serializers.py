@@ -12,6 +12,15 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'title', 'transaction_type']
 
+class TransactionReadSerializer(serializers.ModelSerializer):
+    # Вкладываем полные объекты вместо ID
+    wallet = WalletSerializer(read_only=True)
+    category = CategorySerializer(read_only=True)
+
+    class Meta:
+        model = Transaction
+        fields = ['id', 'wallet', 'category', 'amount', 'date', 'description', 'created_at']
+
 class TransactionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Transaction

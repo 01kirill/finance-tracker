@@ -1,6 +1,6 @@
 from rest_framework import viewsets, permissions
 from .models import Wallet, Category, Transaction
-from .serializers import WalletSerializer, CategorySerializer, TransactionSerializer
+from .serializers import WalletSerializer, CategorySerializer, TransactionSerializer, TransactionReadSerializer
 
 class WalletViewSet(viewsets.ModelViewSet):
     serializer_class = WalletSerializer
@@ -23,8 +23,12 @@ class CategoryViewSet(viewsets.ModelViewSet):
         serializer.save(user=self.request.user)
 
 class TransactionViewSet(viewsets.ModelViewSet):
-    serializer_class = TransactionSerializer
     permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
         return Transaction.objects.filter(wallet__user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action in ['list', 'retrieve']:
+            return TransactionReadSerializer
+        return TransactionSerializer
