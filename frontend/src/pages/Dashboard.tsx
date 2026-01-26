@@ -12,9 +12,13 @@ import { authService } from '../services/auth.service';
 import type { Wallet, Transaction } from '../types/finance';
 import { formatCurrency } from '../utils/currency';
 import { CreateWalletModal } from '../components/CreateWalletModal';
+import { CreateCategoryModal } from '../components/CreateCategoryModal';
+import { CreateTransactionModal } from '../components/CreateTransactionModal';
 
 export function Dashboard() {
   const [createWalletOpened, { open: openWalletModal, close: closeWalletModal }] = useDisclosure(false);
+  const [createCategoryOpened, { open: openCategoryModal, close: closeCategoryModal }] = useDisclosure(false);
+  const [createTransactionOpened, { open: openTransactionModal, close: closeTransactionModal }] = useDisclosure(false);
 
   const navigate = useNavigate();
   const [wallets, setWallets] = useState<Wallet[]>([]);
@@ -103,8 +107,18 @@ export function Dashboard() {
             )}
           </Grid>
 
-          {/* СЕКЦИЯ ТРАНЗАКЦИЙ (Пока простая таблица) */}
-          <Title order={3} mt={40} mb="md">Последние операции</Title>
+          {/* СЕКЦИЯ ТРАНЗАКЦИЙ */}
+          <Group justify="space-between" mt={40} mb="md">
+            <Title order={3}>Последние операции</Title>
+            <Group>
+                <Button variant="default" onClick={openCategoryModal}>
+                    + Категория
+                </Button>
+                <Button color="teal" onClick={openTransactionModal}>
+                    + Операция
+                </Button>
+            </Group>
+          </Group>
 
           <Card shadow="sm" radius="md" withBorder>
             {transactions.length === 0 ? (
@@ -125,7 +139,7 @@ export function Dashboard() {
                       <Table.Td>{t.description || '-'}</Table.Td>
                       <Table.Td
                         fw={700}
-                        c={Number(t.amount) > 0 ? 'teal' : 'red'} // Это пока условно, т.к. бэк отдает абсолютное число, нужно смотреть категорию
+                        c={Number(t.amount) > 0 ? 'teal' : 'red'}
                       >
                         {t.amount}
                       </Table.Td>
@@ -143,7 +157,29 @@ export function Dashboard() {
       <CreateWalletModal
         opened={createWalletOpened}
         close={closeWalletModal}
-        onWalletCreated={(newWallet) => setWallets([...wallets, newWallet])}
+        onWalletCreated={(newWallet) => {
+            // Обновляем список кошельков (добавляем новый в конец)
+            setWallets([...wallets, newWallet]);
+        }}
+      />
+
+      <CreateCategoryModal
+        opened={createCategoryOpened}
+        close={closeCategoryModal}
+        onCategoryCreated={() => {
+            // Категории обновятся автоматически при открытии формы транзакции,
+            // но можно добавить уведомление об успехе
+        }}
+      />
+
+      <CreateTransactionModal
+        opened={createTransactionOpened}
+        close={closeTransactionModal}
+        onTransactionCreated={() => {
+            // Самое важное: после транзакции нужно обновить ВСЁ,
+            // так как изменился баланс кошельков и список операций
+            fetchData();
+        }}
       />
 
     </AppShell>
