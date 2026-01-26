@@ -30,6 +30,14 @@ export const financeService = {
   async createTransaction(data: any) {
     const response = await api.post<Transaction>('/finance/transactions/', data);
     return response.data;
+  },
+
+  async deleteTransaction(id: number) {
+    await api.delete(`/finance/transactions/${id}/`);
+  },
+
+  async deleteWallet(id: number) {
+    await api.delete(`/finance/wallets/${id}/`);
   }
 
 };

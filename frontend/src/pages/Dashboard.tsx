@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import {
   AppShell, Group, Text, Button, Container, Title,
-  Grid, Card, ThemeIcon, Table
+  Grid, Card, ThemeIcon, Table, ActionIcon
 } from '@mantine/core';
 import { useDisclosure } from '@mantine/hooks';
-import { IconWallet, IconLogout, IconPlus } from '@tabler/icons-react';
+import { modals } from '@mantine/modals';
+import { notifications } from '@mantine/notifications';
+import { IconWallet, IconLogout, IconPlus, IconTrash, IconCheck, IconX } from '@tabler/icons-react';
 import { useNavigate } from 'react-router-dom';
 
 import { financeService } from '../services/finance.service';
@@ -49,6 +51,77 @@ export function Dashboard() {
     navigate('/login');
   };
 
+  const openDeleteWalletModal = (id: number, name: string) => modals.openConfirmModal({
+    title: 'Удаление кошелька',
+    centered: true,
+    children: (
+      <Text size="sm">
+        Вы уверены, что хотите удалить кошелек <b>{name}</b>?
+        <br />
+        Все связанные транзакции также будут безвозвратно удалены.
+      </Text>
+    ),
+    labels: { confirm: 'Удалить', cancel: 'Отмена' },
+    confirmProps: { color: 'red' },
+    onConfirm: async () => {
+      try {
+        await financeService.deleteWallet(id);
+
+        notifications.show({
+          title: 'Успешно',
+          message: 'Кошелек удален',
+          color: 'teal',
+          icon: <IconCheck size={16} />,
+        });
+
+        setWallets(wallets.filter(w => w.id !== id));
+        const t = await financeService.getTransactions();
+        setTransactions(t);
+      } catch (e) {
+        notifications.show({
+          title: 'Ошибка',
+          message: 'Не удалось удалить кошелек',
+          color: 'red',
+          icon: <IconX size={16} />,
+        });
+      }
+    },
+  });
+
+  const openDeleteTransactionModal = (id: number) => modals.openConfirmModal({
+    title: 'Удаление операции',
+    centered: true,
+    children: (
+      <Text size="sm">
+        Вы действительно хотите удалить эту запись?
+        Баланс кошелька будет пересчитан.
+      </Text>
+    ),
+    labels: { confirm: 'Удалить', cancel: 'Отмена' },
+    confirmProps: { color: 'red' },
+    onConfirm: async () => {
+      try {
+        await financeService.deleteTransaction(id);
+
+        notifications.show({
+          title: 'Успешно',
+          message: 'Операция удалена',
+          color: 'teal',
+          icon: <IconCheck size={16} />,
+        });
+
+        fetchData();
+      } catch (e) {
+        notifications.show({
+          title: 'Ошибка',
+          message: 'Не удалось удалить операцию',
+          color: 'red',
+          icon: <IconX size={16} />,
+        });
+      }
+    },
+  });
+
   return (
     <AppShell
       header={{ height: 60 }}
@@ -74,7 +147,6 @@ export function Dashboard() {
 
       <AppShell.Main bg="gray.0">
         <Container size="lg" py="xl">
-          {/* СЕКЦИЯ КОШЕЛЬКОВ */}
           <Group justify="space-between" mb="lg">
             <Title order={2}>Мои кошельки</Title>
             <Button leftSection={<IconPlus size={16} />} color="teal" onClick={openWalletModal}>
@@ -90,11 +162,18 @@ export function Dashboard() {
                 <Grid.Col key={wallet.id} span={{ base: 12, sm: 6, md: 4 }}>
                   <Card shadow="sm" padding="lg" radius="md" withBorder>
                     <Group justify="space-between" mb="xs">
-                      <Text fw={500}>{wallet.name}</Text>
-                      <ThemeIcon color="teal" variant="light">
-                        <IconWallet size={16} />
-                      </ThemeIcon>
+                      <Group gap="xs">
+                        <ThemeIcon color="teal" variant="light">
+                          <IconWallet size={16} />
+                        </ThemeIcon>
+                        <Text fw={500}>{wallet.name}</Text>
+                      </Group>
+                      {/* Вызываем красивую модалку */}
+                      <ActionIcon variant="subtle" color="gray" onClick={() => openDeleteWalletModal(wallet.id, wallet.name)}>
+                        <IconTrash size={16} />
+                      </ActionIcon>
                     </Group>
+
                     <Text size="xl" fw={700} c="teal">
                       {formatCurrency(wallet.balance, wallet.currency)}
                     </Text>
@@ -107,7 +186,6 @@ export function Dashboard() {
             )}
           </Grid>
 
-          {/* СЕКЦИЯ ТРАНЗАКЦИЙ */}
           <Group justify="space-between" mt={40} mb="md">
             <Title order={3}>Последние операции</Title>
             <Group>
@@ -128,20 +206,46 @@ export function Dashboard() {
                 <Table.Thead>
                   <Table.Tr>
                     <Table.Th>Дата</Table.Th>
+                    <Table.Th>Категория</Table.Th>
+                    <Table.Th>Кошелек</Table.Th>
                     <Table.Th>Описание</Table.Th>
                     <Table.Th>Сумма</Table.Th>
+                    <Table.Th></Table.Th>
                   </Table.Tr>
                 </Table.Thead>
                 <Table.Tbody>
                   {transactions.map((t) => (
                     <Table.Tr key={t.id}>
                       <Table.Td>{t.date}</Table.Td>
+
+                      <Table.Td>
+                        {t.category ? (
+                          <Text size="sm" c={t.category.transaction_type === 'INCOME' ? 'teal' : 'red'}>
+                            {t.category.title}
+                          </Text>
+                        ) : (
+                          <Text size="sm" c="dimmed">Без категории</Text>
+                        )}
+                      </Table.Td>
+
+                      <Table.Td>
+                         <Text size="sm">{t.wallet.name}</Text>
+                      </Table.Td>
+
                       <Table.Td>{t.description || '-'}</Table.Td>
+
                       <Table.Td
                         fw={700}
-                        c={Number(t.amount) > 0 ? 'teal' : 'red'}
+                        c={t.category?.transaction_type === 'INCOME' ? 'teal' : 'red'}
                       >
-                        {t.amount}
+                        {t.category?.transaction_type === 'EXPENSE' ? '-' : '+'}{t.amount}
+                      </Table.Td>
+
+                      <Table.Td>
+                        {/* Вызываем красивую модалку */}
+                        <ActionIcon color="red" variant="subtle" onClick={() => openDeleteTransactionModal(t.id)}>
+                            <IconTrash size={16} />
+                        </ActionIcon>
                       </Table.Td>
                     </Table.Tr>
                   ))}
@@ -153,13 +257,12 @@ export function Dashboard() {
         </Container>
       </AppShell.Main>
 
-      {/* МОДАЛЬНЫЕ ОКНА */}
       <CreateWalletModal
         opened={createWalletOpened}
         close={closeWalletModal}
         onWalletCreated={(newWallet) => {
-            // Обновляем список кошельков (добавляем новый в конец)
             setWallets([...wallets, newWallet]);
+            notifications.show({ title: 'Успешно', message: 'Кошелек создан', color: 'teal' });
         }}
       />
 
@@ -167,8 +270,7 @@ export function Dashboard() {
         opened={createCategoryOpened}
         close={closeCategoryModal}
         onCategoryCreated={() => {
-            // Категории обновятся автоматически при открытии формы транзакции,
-            // но можно добавить уведомление об успехе
+            notifications.show({ title: 'Успешно', message: 'Категория создана', color: 'teal' });
         }}
       />
 
@@ -176,9 +278,8 @@ export function Dashboard() {
         opened={createTransactionOpened}
         close={closeTransactionModal}
         onTransactionCreated={() => {
-            // Самое важное: после транзакции нужно обновить ВСЁ,
-            // так как изменился баланс кошельков и список операций
             fetchData();
+            notifications.show({ title: 'Успешно', message: 'Операция добавлена', color: 'teal' });
         }}
       />
 
