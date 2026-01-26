@@ -20,5 +20,11 @@ export const financeService = {
   async getCategories() {
     const response = await api.get<Category[]>('/finance/categories/');
     return response.data;
-  }
+  },
+
+  async createCategory(data: { title: string; transaction_type: string }) {
+    const response = await api.post<Category>('/finance/categories/', data);
+    return response.data;
+  },
+
 };
