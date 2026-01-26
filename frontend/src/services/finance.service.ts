@@ -12,18 +12,17 @@ export const financeService = {
     return response.data;
   },
 
+  async updateWallet(id: number, name: string) {
+    const response = await api.patch<Wallet>(`/finance/wallets/${id}/`, { name });
+    return response.data;
+  },
+
+  async deleteWallet(id: number) {
+    await api.delete(`/finance/wallets/${id}/`);
+  },
+
   async getTransactions() {
     const response = await api.get<Transaction[]>('/finance/transactions/');
-    return response.data;
-  },
-
-  async getCategories() {
-    const response = await api.get<Category[]>('/finance/categories/');
-    return response.data;
-  },
-
-  async createCategory(data: { title: string; transaction_type: string }) {
-    const response = await api.post<Category>('/finance/categories/', data);
     return response.data;
   },
 
@@ -36,8 +35,23 @@ export const financeService = {
     await api.delete(`/finance/transactions/${id}/`);
   },
 
-  async deleteWallet(id: number) {
-    await api.delete(`/finance/wallets/${id}/`);
-  }
+  async getCategories() {
+    const response = await api.get<Category[]>('/finance/categories/');
+    return response.data;
+  },
+
+  async createCategory(data: { title: string; transaction_type: string }) {
+    const response = await api.post<Category>('/finance/categories/', data);
+    return response.data;
+  },
+
+  async updateCategory(id: number, title: string) {
+    const response = await api.patch<Category>(`/finance/categories/${id}/`, { title });
+    return response.data;
+  },
+
+  async deleteCategory(id: number) {
+    await api.delete(`/finance/categories/${id}/`);
+  },
 
 };

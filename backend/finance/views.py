@@ -32,3 +32,5 @@ class TransactionViewSet(viewsets.ModelViewSet):
         if self.action in ['list', 'retrieve']:
             return TransactionReadSerializer
         return TransactionSerializer
+
+    http_method_names = ['get', 'post', 'delete', 'head', 'options']
