@@ -14,7 +14,7 @@ class Wallet(models.Model):
         related_name='wallets'
     )
     name = models.CharField(max_length=50)
-    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='RUB')
+    currency = models.CharField(max_length=3, choices=CURRENCY_CHOICES, default='BYN')
     balance = models.DecimalField(max_digits=12, decimal_places=2, default=0.00)
     created_at = models.DateTimeField(auto_now_add=True)
 
