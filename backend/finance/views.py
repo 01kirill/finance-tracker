@@ -1,4 +1,9 @@
+from django.db.models import Sum
+from django.utils.dateparse import parse_date
 from rest_framework import viewsets, permissions
+from rest_framework.views import APIView
+from rest_framework.response import Response
+
 from .models import Wallet, Category, Transaction
 from .serializers import WalletSerializer, CategorySerializer, TransactionSerializer, TransactionReadSerializer
 
@@ -34,3 +39,26 @@ class TransactionViewSet(viewsets.ModelViewSet):
         return TransactionSerializer
 
     http_method_names = ['get', 'post', 'delete', 'head', 'options']
+
+class TransactionStatsView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        start_date = request.query_params.get('start_date')
+        end_date = request.query_params.get('end_date')
+
+        queryset = Transaction.objects.filter(
+            wallet__user=request.user,
+            category__transaction_type='EXPENSE'
+        )
+
+        if start_date:
+            queryset = queryset.filter(date__gte=parse_date(start_date))
+        if end_date:
+            queryset = queryset.filter(date__lte=parse_date(end_date))
+
+        stats = queryset.values('category__title', 'category__id') \
+            .annotate(total_amount=Sum('amount')) \
+            .order_by('-total_amount')
+
+        return Response(stats)
