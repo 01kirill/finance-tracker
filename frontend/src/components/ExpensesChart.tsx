@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Paper, Title, SegmentedControl, Group, Text, Loader, Center } from '@mantine/core';
+import { Paper, Title, SegmentedControl, Group, Text, Loader, Center, Select } from '@mantine/core';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import dayjs from 'dayjs';
 import { financeService } from '../services/finance.service';
@@ -8,13 +8,14 @@ import { formatCurrency } from '../utils/currency';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A020F0', '#FF6384', '#36A2EB'];
 
-// Добавляем интерфейс пропсов
 interface Props {
-  refreshTrigger: number; // Просто число, которое будет меняться
+  refreshTrigger: number;
 }
 
 export function ExpensesChart({ refreshTrigger }: Props) {
   const [period, setPeriod] = useState('month');
+  const [currency, setCurrency] = useState<string>('BYN');
+
   const [data, setData] = useState<ExpenseStat[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -30,7 +31,8 @@ export function ExpensesChart({ refreshTrigger }: Props) {
     try {
       const stats = await financeService.getExpenseStats(
         start.format('YYYY-MM-DD'),
-        end.format('YYYY-MM-DD')
+        end.format('YYYY-MM-DD'),
+        currency
       );
       setData(stats);
     } catch (error) {
@@ -40,10 +42,9 @@ export function ExpensesChart({ refreshTrigger }: Props) {
     }
   };
 
-  // ВАЖНО: Добавляем refreshTrigger в зависимости
   useEffect(() => {
     fetchStats();
-  }, [period, refreshTrigger]);
+  }, [period, refreshTrigger, currency]);
 
   const chartData = data.map(item => ({
     name: item.category__title || 'Без категории',
@@ -54,17 +55,30 @@ export function ExpensesChart({ refreshTrigger }: Props) {
 
   return (
     <Paper shadow="sm" radius="md" p="md" withBorder mt="xl">
-      <Group justify="space-between" mb="lg">
+      <Group justify="space-between" mb="lg" align="center">
         <Title order={3}>Аналитика расходов</Title>
-        <SegmentedControl
-          value={period}
-          onChange={setPeriod}
-          data={[
-            { label: 'Неделя', value: 'week' },
-            { label: 'Месяц', value: 'month' },
-            { label: 'Год', value: 'year' },
-          ]}
-        />
+
+        <Group>
+            {/* Выбор валюты графика */}
+            <Select
+                data={['BYN', 'USD', 'EUR']}
+                value={currency}
+                onChange={(val) => setCurrency(val || 'BYN')}
+                w={80}
+                allowDeselect={false}
+            />
+
+            {/* Выбор периода */}
+            <SegmentedControl
+            value={period}
+            onChange={setPeriod}
+            data={[
+                { label: 'Неделя', value: 'week' },
+                { label: 'Месяц', value: 'month' },
+                { label: 'Год', value: 'year' },
+            ]}
+            />
+        </Group>
       </Group>
 
       {loading ? (
@@ -89,14 +103,15 @@ export function ExpensesChart({ refreshTrigger }: Props) {
                   <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                 ))}
               </Pie>
-              <Tooltip formatter={(value) => formatCurrency(value as number, 'BYN')} />
+              {/* Форматируем тултип и итог в выбранной валюте */}
+              <Tooltip formatter={(value) => formatCurrency(value as number, currency)} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
 
           <Center mt="md">
              <Text fw={700} size="lg">
-               Итого: {formatCurrency(totalSum, 'BYN')}
+               Итого: {formatCurrency(totalSum, currency)}
              </Text>
           </Center>
         </div>

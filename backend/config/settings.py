@@ -12,6 +12,7 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 
 from pathlib import Path
 import os
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -201,3 +202,20 @@ EMAIL_HOST_PASSWORD = ''
 DEFAULT_FROM_EMAIL = 'info@finance-tracker.com'
 DOMAIN = 'localhost:5173'
 SITE_NAME = 'Finance Tracker'
+
+CELERY_BEAT_SCHEDULE = {
+    'update-rates-every-day': {
+        'task': 'finance.tasks.update_exchange_rates',
+        'schedule': crontab(minute=0, hour=3),
+    },
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": "redis://redis:6379/1",
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+        }
+    }
+}

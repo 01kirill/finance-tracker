@@ -54,9 +54,16 @@ export const financeService = {
     await api.delete(`/finance/categories/${id}/`);
   },
 
-  async getExpenseStats(startDate: string, endDate: string) {
+  async getExpenseStats(startDate: string, endDate: string, currency: string = 'BYN') {
     const response = await api.get<ExpenseStat[]>('/finance/stats/', {
-      params: { start_date: startDate, end_date: endDate }
+      params: { start_date: startDate, end_date: endDate, currency: currency }
+    });
+    return response.data;
+  },
+
+  async getTotalBalance(currency: string = 'BYN') {
+    const response = await api.get<{ total: number; currency: string }>('/finance/balance/', {
+      params: { currency }
     });
     return response.data;
   },

@@ -22,6 +22,7 @@ import { CreateTransactionModal } from '../components/CreateTransactionModal';
 import { EditWalletModal } from '../components/EditWalletModal';
 import { EditCategoryModal } from '../components/EditCategoryModal';
 import { ExpensesChart } from '../components/ExpensesChart';
+import { TotalBalance } from '../components/TotalBalance';
 
 export function Dashboard() {
   const [createWalletOpened, { open: openWalletModal, close: closeWalletModal }] = useDisclosure(false);
@@ -130,8 +131,11 @@ export function Dashboard() {
       <AppShell.Main bg="gray.0">
         <Container size="lg" py="xl">
 
+          {/* --- ОБЩИЙ БАЛАНС (НОВОЕ) --- */}
+          <TotalBalance refreshTrigger={refreshKey} />
+
           {/* --- КОШЕЛЬКИ --- */}
-          <Group justify="space-between" mb="lg">
+          <Group justify="space-between" mb="lg" mt="xl">
             <Title order={2}>Кошельки</Title>
             <Button leftSection={<IconPlus size={16} />} color="teal" onClick={openWalletModal}>Счет</Button>
           </Group>
@@ -256,7 +260,7 @@ export function Dashboard() {
       </AppShell.Main>
 
       {/* --- MODALS --- */}
-      <CreateWalletModal opened={createWalletOpened} close={closeWalletModal} onWalletCreated={fetchData} />
+      <CreateWalletModal opened={createWalletOpened} close={closeWalletModal} onWalletCreated={(nw) => { setWallets([...wallets, nw]); setRefreshKey(k=>k+1); }} />
       <CreateCategoryModal opened={createCategoryOpened} close={closeCategoryModal} onCategoryCreated={fetchData} />
 
       <CreateTransactionModal
@@ -264,7 +268,7 @@ export function Dashboard() {
         close={closeTransactionModal}
         onTransactionCreated={() => {
             fetchData();
-            setRefreshKey(prev => prev + 1); // Обновляем график
+            setRefreshKey(prev => prev + 1); // Обновляем баланс и графики
             notifications.show({ title: 'Успешно', message: 'Операция добавлена', color: 'teal' });
         }}
       />
