@@ -21,6 +21,7 @@ import { CreateCategoryModal } from '../components/CreateCategoryModal';
 import { CreateTransactionModal } from '../components/CreateTransactionModal';
 import { EditWalletModal } from '../components/EditWalletModal';
 import { EditCategoryModal } from '../components/EditCategoryModal';
+import { ExpensesChart } from '../components/ExpensesChart';
 
 export function Dashboard() {
   const [createWalletOpened, { open: openWalletModal, close: closeWalletModal }] = useDisclosure(false);
@@ -39,6 +40,8 @@ export function Dashboard() {
   const [categories, setCategories] = useState<Category[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [user, setUser] = useState<any>(null);
+
+  const [refreshKey, setRefreshKey] = useState(0);
 
   const fetchData = async () => {
     try {
@@ -69,6 +72,7 @@ export function Dashboard() {
       await financeService.deleteWallet(id);
       notifications.show({ title: 'Кошелек удален', color: 'teal', message: '' });
       fetchData();
+      setRefreshKey(prev => prev + 1);
     },
   });
 
@@ -81,6 +85,7 @@ export function Dashboard() {
       await financeService.deleteCategory(id);
       notifications.show({ title: 'Категория удалена', color: 'teal', message: '' });
       fetchData();
+      setRefreshKey(prev => prev + 1);
     },
   });
 
@@ -93,6 +98,7 @@ export function Dashboard() {
       await financeService.deleteTransaction(id);
       notifications.show({ title: 'Операция удалена', color: 'teal', message: '' });
       fetchData();
+      setRefreshKey(prev => prev + 1);
     },
   });
 
@@ -154,8 +160,11 @@ export function Dashboard() {
             ))}
           </Grid>
 
+          {/* --- АНАЛИТИКА (ГРАФИК) --- */}
+          <ExpensesChart refreshTrigger={refreshKey} />
+
           {/* --- КАТЕГОРИИ --- */}
-          <Group justify="space-between" mb="lg">
+          <Group justify="space-between" mb="lg" mt={40}>
             <Title order={2}>Категории</Title>
             <Button leftSection={<IconPlus size={16} />} variant="default" onClick={openCategoryModal}>Категория</Button>
           </Group>
@@ -249,7 +258,16 @@ export function Dashboard() {
       {/* --- MODALS --- */}
       <CreateWalletModal opened={createWalletOpened} close={closeWalletModal} onWalletCreated={fetchData} />
       <CreateCategoryModal opened={createCategoryOpened} close={closeCategoryModal} onCategoryCreated={fetchData} />
-      <CreateTransactionModal opened={createTransactionOpened} close={closeTransactionModal} onTransactionCreated={fetchData} />
+
+      <CreateTransactionModal
+        opened={createTransactionOpened}
+        close={closeTransactionModal}
+        onTransactionCreated={() => {
+            fetchData();
+            setRefreshKey(prev => prev + 1); // Обновляем график
+            notifications.show({ title: 'Успешно', message: 'Операция добавлена', color: 'teal' });
+        }}
+      />
 
       <EditWalletModal
         opened={editWalletOpened}
