@@ -26,3 +26,9 @@ export interface CreateWalletRequest {
   name: string;
   currency: string;
 }
+
+export interface ExpenseStat {
+  category__title: string;
+  category__id: number;
+  total_amount: number;
+}

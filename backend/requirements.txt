@@ -10,3 +10,5 @@ djangorestframework-simplejwt
 drf-spectacular
 celery
 redis
+requests
+django-redis

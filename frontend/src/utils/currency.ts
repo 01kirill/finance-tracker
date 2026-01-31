@@ -1,7 +1,7 @@
 export const formatCurrency = (amount: string | number, currency: string) => {
   const value = Number(amount);
 
-  return new Intl.NumberFormat('ru-RU', {
+  return new Intl.NumberFormat('ru-BY', {
     style: 'currency',
     currency: currency,
     currencyDisplay: 'symbol',

@@ -1,5 +1,5 @@
 import api from './api';
-import type { Wallet, Transaction, Category, CreateWalletRequest } from '../types/finance';
+import type { ExpenseStat, Wallet, Transaction, Category, CreateWalletRequest } from '../types/finance';
 
 export const financeService = {
   async getWallets() {
@@ -52,6 +52,20 @@ export const financeService = {
 
   async deleteCategory(id: number) {
     await api.delete(`/finance/categories/${id}/`);
+  },
+
+  async getExpenseStats(startDate: string, endDate: string, currency: string = 'BYN') {
+    const response = await api.get<ExpenseStat[]>('/finance/stats/', {
+      params: { start_date: startDate, end_date: endDate, currency: currency }
+    });
+    return response.data;
+  },
+
+  async getTotalBalance(currency: string = 'BYN') {
+    const response = await api.get<{ total: number; currency: string }>('/finance/balance/', {
+      params: { currency }
+    });
+    return response.data;
   },
 
 };
