@@ -51,20 +51,23 @@ class TransactionStatsView(APIView):
     def get(self, request):
         start_date = request.query_params.get('start_date')
         end_date = request.query_params.get('end_date')
-
         target_currency = request.query_params.get('currency', 'BYN').upper()
+        tx_type = request.query_params.get('type', 'EXPENSE').upper()
 
         rates = cache.get('currency_rates')
         if not rates:
-            update_exchange_rates()
-            rates = cache.get('currency_rates')
+            try:
+                update_exchange_rates()
+                rates = cache.get('currency_rates')
+            except Exception as e:
+                print(f"Error updating rates: {e}")
 
         if not rates:
             rates = {'BYN': 1, 'USD': 1, 'EUR': 1}
 
         queryset = Transaction.objects.filter(
             wallet__user=request.user,
-            category__transaction_type='EXPENSE'
+            category__transaction_type=tx_type
         )
         if start_date:
             queryset = queryset.filter(date__gte=parse_date(start_date))
@@ -81,7 +84,7 @@ class TransactionStatsView(APIView):
 
         for item in raw_stats:
             cat_id = item['category__id']
-            title = item['category__title']
+            title = item['category__title'] or "Без категории"
             amount = item['total_amount']
             source_currency = item['wallet__currency']
 
@@ -108,7 +111,6 @@ class TransactionStatsView(APIView):
         )
 
         return Response(response_data)
-
 
 class WalletTotalView(APIView):
     permission_classes = [permissions.IsAuthenticated]

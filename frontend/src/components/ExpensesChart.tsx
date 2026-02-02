@@ -3,36 +3,40 @@ import { Paper, Title, SegmentedControl, Group, Text, Loader, Center, Select } f
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import dayjs from 'dayjs';
 import { financeService } from '../services/finance.service';
-import type { ExpenseStat } from '../types/finance';
+import type{ ExpenseStat } from '../types/finance';
 import { formatCurrency } from '../utils/currency';
 
-const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#A020F0', '#FF6384', '#36A2EB'];
+const COLORS_EXPENSE = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#A020F0', '#FF6384'];
+const COLORS_INCOME = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#A020F0', '#FF6384'];
 
 interface Props {
   refreshTrigger: number;
 }
 
 export function ExpensesChart({ refreshTrigger }: Props) {
-  const [period, setPeriod] = useState('month');
+  const [period, setPeriod] = useState('month'); // day | week | month | year
   const [currency, setCurrency] = useState<string>('BYN');
+  const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE'); // <-- Тип операции
 
   const [data, setData] = useState<ExpenseStat[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchStats = async () => {
     setLoading(true);
-    const end = dayjs();
-    let start = dayjs();
 
-    if (period === 'week') start = end.subtract(7, 'day');
-    if (period === 'month') start = end.startOf('month');
-    if (period === 'year') start = end.startOf('year');
+    const end = dayjs().endOf('day');
+    let start = dayjs().startOf('day');
+
+    if (period === 'week') start = dayjs().subtract(6, 'day').startOf('day'); // Последние 7 дней
+    if (period === 'month') start = dayjs().startOf('month');
+    if (period === 'year') start = dayjs().startOf('year');
 
     try {
-      const stats = await financeService.getExpenseStats(
+      const stats = await financeService.getStats(
         start.format('YYYY-MM-DD'),
         end.format('YYYY-MM-DD'),
-        currency
+        currency,
+        type
       );
       setData(stats);
     } catch (error) {
@@ -44,7 +48,7 @@ export function ExpensesChart({ refreshTrigger }: Props) {
 
   useEffect(() => {
     fetchStats();
-  }, [period, refreshTrigger, currency]);
+  }, [period, refreshTrigger, currency, type]);
 
   const chartData = data.map(item => ({
     name: item.category__title || 'Без категории',
@@ -52,14 +56,25 @@ export function ExpensesChart({ refreshTrigger }: Props) {
   }));
 
   const totalSum = chartData.reduce((acc, item) => acc + item.value, 0);
+  const currentColors = type === 'INCOME' ? COLORS_INCOME : COLORS_EXPENSE;
 
   return (
     <Paper shadow="sm" radius="md" p="md" withBorder mt="xl">
       <Group justify="space-between" mb="lg" align="center">
-        <Title order={3}>Аналитика расходов</Title>
+        <Title order={3}>Аналитика</Title>
 
         <Group>
-            {/* Выбор валюты графика */}
+            {/* Выбор: Доход или Расход */}
+            <SegmentedControl
+              value={type}
+              onChange={(val) => setType(val as any)}
+              color={type === 'INCOME' ? 'teal' : 'red'}
+              data={[
+                { label: 'Расходы', value: 'EXPENSE' },
+                { label: 'Доходы', value: 'INCOME' },
+              ]}
+            />
+
             <Select
                 data={['BYN', 'USD', 'EUR']}
                 value={currency}
@@ -67,24 +82,31 @@ export function ExpensesChart({ refreshTrigger }: Props) {
                 w={80}
                 allowDeselect={false}
             />
-
-            {/* Выбор периода */}
-            <SegmentedControl
-            value={period}
-            onChange={setPeriod}
-            data={[
-                { label: 'Неделя', value: 'week' },
-                { label: 'Месяц', value: 'month' },
-                { label: 'Год', value: 'year' },
-            ]}
-            />
         </Group>
       </Group>
+
+      {/* Период вынесли на новую строку для удобства на мобилках */}
+      <SegmentedControl
+        fullWidth
+        value={period}
+        onChange={setPeriod}
+        mb="lg"
+        data={[
+          { label: 'Сегодня', value: 'day' }, // <-- Новый фильтр
+          { label: 'Неделя', value: 'week' },
+          { label: 'Месяц', value: 'month' },
+          { label: 'Год', value: 'year' },
+        ]}
+      />
 
       {loading ? (
         <Center h={300}><Loader color="teal" /></Center>
       ) : chartData.length === 0 ? (
-        <Center h={300}><Text c="dimmed">Нет расходов за этот период</Text></Center>
+        <Center h={300}>
+          <Text c="dimmed">
+            Нет {type === 'INCOME' ? 'доходов' : 'расходов'} за этот период
+          </Text>
+        </Center>
       ) : (
         <div style={{ width: '100%', height: 300 }}>
           <ResponsiveContainer>
@@ -93,27 +115,29 @@ export function ExpensesChart({ refreshTrigger }: Props) {
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                fill="#8884d8"
-                paddingAngle={5}
+                innerRadius={80} // Чуть тоньше пончик
+                outerRadius={110}
+                paddingAngle={2}
                 dataKey="value"
               >
                 {chartData.map((_entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                  <Cell key={`cell-${index}`} fill={currentColors[index % currentColors.length]} stroke="none"/>
                 ))}
               </Pie>
-              {/* Форматируем тултип и итог в выбранной валюте */}
               <Tooltip formatter={(value) => formatCurrency(value as number, currency)} />
               <Legend />
             </PieChart>
           </ResponsiveContainer>
 
-          <Center mt="md">
-             <Text fw={700} size="lg">
-               Итого: {formatCurrency(totalSum, currency)}
-             </Text>
+          <Center mt={-160} style={{ pointerEvents: 'none' }}> {/* Хак: текст внутри пончика */}
+             <div style={{ textAlign: 'center' }}>
+               <Text c="dimmed" size="xs">Итого</Text>
+               <Text fw={700} size="xl" c={type === 'INCOME' ? 'teal' : 'red'}>
+                 {formatCurrency(totalSum, currency)}
+               </Text>
+             </div>
           </Center>
+          <div style={{ height: 100 }}></div> {/* Распорка, т.к. текст внутри */}
         </div>
       )}
     </Paper>

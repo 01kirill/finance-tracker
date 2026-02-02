@@ -131,7 +131,7 @@ export function Dashboard() {
       <AppShell.Main bg="gray.0">
         <Container size="lg" py="xl">
 
-          {/* --- ОБЩИЙ БАЛАНС (НОВОЕ) --- */}
+          {/* --- ОБЩИЙ БАЛАНС --- */}
           <TotalBalance refreshTrigger={refreshKey} />
 
           {/* --- КОШЕЛЬКИ --- */}
@@ -145,9 +145,10 @@ export function Dashboard() {
               <Grid.Col key={wallet.id} span={{ base: 12, sm: 6, md: 4 }}>
                 <Card shadow="sm" padding="lg" radius="md" withBorder>
                   <Group justify="space-between" mb="xs">
-                    <Group gap="xs">
+                    <Group gap="xs" style={{ flex: 1, overflow: 'hidden' }}>
                       <ThemeIcon color="teal" variant="light"><IconWallet size={16} /></ThemeIcon>
-                      <Text fw={500}>{wallet.name}</Text>
+                      {/* TRUNCATE: Обрезаем длинное имя */}
+                      <Text fw={500} truncate>{wallet.name}</Text>
                     </Group>
                     <Group gap={0}>
                        <ActionIcon variant="subtle" color="gray" onClick={() => handleEditWalletClick(wallet)}>
@@ -182,6 +183,7 @@ export function Dashboard() {
                       <ThemeIcon color={cat.transaction_type === 'INCOME' ? 'teal' : 'red'} variant="light" size="md">
                         <IconCategory size={18}/>
                       </ThemeIcon>
+                      {/* TRUNCATE: Обрезаем длинное название */}
                       <Text size="sm" fw={600} truncate title={cat.title}>
                         {cat.title}
                       </Text>
@@ -217,42 +219,54 @@ export function Dashboard() {
           </Group>
           <Card shadow="sm" radius="md" withBorder>
             {transactions.length === 0 ? <Text c="dimmed" ta="center" p="md">Нет операций</Text> : (
-              <Table striped highlightOnHover>
-                <Table.Thead>
-                  <Table.Tr>
-                    <Table.Th>Дата</Table.Th>
-                    <Table.Th>Категория</Table.Th>
-                    <Table.Th>Кошелек</Table.Th>
-                    <Table.Th>Описание</Table.Th>
-                    <Table.Th>Сумма</Table.Th>
-                    <Table.Th></Table.Th>
-                  </Table.Tr>
-                </Table.Thead>
-                <Table.Tbody>
-                  {transactions.map((t) => (
-                    <Table.Tr key={t.id}>
-                      <Table.Td>{t.date}</Table.Td>
-                      <Table.Td>
-                        {t.category ? (
-                          <Badge color={t.category.transaction_type === 'INCOME' ? 'teal' : 'red'} variant="light">
-                            {t.category.title}
-                          </Badge>
-                        ) : <Text size="sm" c="dimmed">-</Text>}
-                      </Table.Td>
-                      <Table.Td><Text size="sm">{t.wallet.name}</Text></Table.Td>
-                      <Table.Td>{t.description || '-'}</Table.Td>
-                      <Table.Td fw={700} c={t.category?.transaction_type === 'INCOME' ? 'teal' : 'red'}>
-                        {t.category?.transaction_type === 'EXPENSE' ? '-' : '+'}{t.amount}
-                      </Table.Td>
-                      <Table.Td>
-                        <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteTransaction(t.id)}>
-                            <IconTrash size={16} />
-                        </ActionIcon>
-                      </Table.Td>
+              // SCROLL CONTAINER: Фикс для мобильных устройств
+              <Table.ScrollContainer minWidth={800}>
+                <Table striped highlightOnHover>
+                  <Table.Thead>
+                    <Table.Tr>
+                      <Table.Th>Дата</Table.Th>
+                      <Table.Th>Категория</Table.Th>
+                      <Table.Th>Кошелек</Table.Th>
+                      <Table.Th>Описание</Table.Th>
+                      <Table.Th>Сумма</Table.Th>
+                      <Table.Th></Table.Th>
                     </Table.Tr>
-                  ))}
-                </Table.Tbody>
-              </Table>
+                  </Table.Thead>
+                  <Table.Tbody>
+                    {transactions.map((t) => (
+                      <Table.Tr key={t.id}>
+                        <Table.Td>{t.date}</Table.Td>
+                        <Table.Td>
+                          {t.category ? (
+                            <Badge color={t.category.transaction_type === 'INCOME' ? 'teal' : 'red'} variant="light">
+                              {t.category.title}
+                            </Badge>
+                          ) : <Text size="sm" c="dimmed">-</Text>}
+                        </Table.Td>
+                        <Table.Td>
+                            {/* Ограничиваем ширину и обрезаем */}
+                            <div style={{ maxWidth: 120 }}>
+                                <Text size="sm" truncate>{t.wallet.name}</Text>
+                            </div>
+                        </Table.Td>
+                        <Table.Td>
+                            <div style={{ maxWidth: 200 }}>
+                                <Text size="sm" truncate>{t.description || '-'}</Text>
+                            </div>
+                        </Table.Td>
+                        <Table.Td fw={700} c={t.category?.transaction_type === 'INCOME' ? 'teal' : 'red'}>
+                          {t.category?.transaction_type === 'EXPENSE' ? '-' : '+'}{t.amount}
+                        </Table.Td>
+                        <Table.Td>
+                          <ActionIcon color="red" variant="subtle" onClick={() => handleDeleteTransaction(t.id)}>
+                              <IconTrash size={16} />
+                          </ActionIcon>
+                        </Table.Td>
+                      </Table.Tr>
+                    ))}
+                  </Table.Tbody>
+                </Table>
+              </Table.ScrollContainer>
             )}
           </Card>
 
