@@ -1,35 +1,54 @@
 import { useEffect, useState } from 'react';
 import { Paper, Title, SegmentedControl, Group, Text, Loader, Center, Select } from '@mantine/core';
+import { DateInput, MonthPickerInput, YearPickerInput } from '@mantine/dates'; // <-- Новые компоненты
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import dayjs from 'dayjs';
+import 'dayjs/locale/ru';
 import { financeService } from '../services/finance.service';
-import type{ ExpenseStat } from '../types/finance';
+import type { ExpenseStat } from '../types/finance';
 import { formatCurrency } from '../utils/currency';
+import { IconCalendar } from '@tabler/icons-react';
+
+dayjs.locale('ru');
 
 const COLORS_EXPENSE = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#A020F0', '#FF6384'];
-const COLORS_INCOME = ['#FF8042', '#0088FE', '#00C49F', '#FFBB28', '#A020F0', '#FF6384'];
+const COLORS_INCOME = ['#20c997', '#087f5b', '#3bc9db', '#0b7285', '#69db7c', '#2f9e44'];
 
 interface Props {
   refreshTrigger: number;
 }
 
-export function ExpensesChart({ refreshTrigger }: Props) {
-  const [period, setPeriod] = useState('month'); // day | week | month | year
+export function AnalyticsChart({ refreshTrigger }: Props) {
+  const [period, setPeriod] = useState('month');
   const [currency, setCurrency] = useState<string>('BYN');
-  const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE'); // <-- Тип операции
+  const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
+
+  const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
 
   const [data, setData] = useState<ExpenseStat[]>([]);
   const [loading, setLoading] = useState(false);
 
   const fetchStats = async () => {
+    if (!selectedDate) return;
     setLoading(true);
 
-    const end = dayjs().endOf('day');
-    let start = dayjs().startOf('day');
+    const baseDate = dayjs(selectedDate);
+    let start = baseDate;
+    let end = baseDate;
 
-    if (period === 'week') start = dayjs().subtract(6, 'day').startOf('day'); // Последние 7 дней
-    if (period === 'month') start = dayjs().startOf('month');
-    if (period === 'year') start = dayjs().startOf('year');
+    if (period === 'day') {
+        start = baseDate.startOf('day');
+        end = baseDate.endOf('day');
+    } else if (period === 'week') {
+        start = baseDate.startOf('week');
+        end = baseDate.endOf('week');
+    } else if (period === 'month') {
+        start = baseDate.startOf('month');
+        end = baseDate.endOf('month');
+    } else if (period === 'year') {
+        start = baseDate.startOf('year');
+        end = baseDate.endOf('year');
+    }
 
     try {
       const stats = await financeService.getStats(
@@ -48,7 +67,7 @@ export function ExpensesChart({ refreshTrigger }: Props) {
 
   useEffect(() => {
     fetchStats();
-  }, [period, refreshTrigger, currency, type]);
+  }, [period, refreshTrigger, currency, type, selectedDate]);
 
   const chartData = data.map(item => ({
     name: item.category__title || 'Без категории',
@@ -58,14 +77,33 @@ export function ExpensesChart({ refreshTrigger }: Props) {
   const totalSum = chartData.reduce((acc, item) => acc + item.value, 0);
   const currentColors = type === 'INCOME' ? COLORS_INCOME : COLORS_EXPENSE;
 
+  const renderDatePicker = () => {
+    const commonProps = {
+      value: selectedDate,
+      onChange: setSelectedDate,
+      placeholder: "Выберите дату",
+      leftSection: <IconCalendar size={16} />,
+      clearable: false,
+      style: { flex: 1 }
+    };
+
+    if (period === 'year') {
+      return <YearPickerInput {...commonProps} valueFormat="YYYY" />;
+    }
+    if (period === 'month') {
+      return <MonthPickerInput {...commonProps} valueFormat="MMMM YYYY" />;
+    }
+    return <DateInput {...commonProps} valueFormat="DD MMMM YYYY" />;
+  };
+
   return (
     <Paper shadow="sm" radius="md" p="md" withBorder mt="xl">
-      <Group justify="space-between" mb="lg" align="center">
+      <Group justify="space-between" mb="sm" align="center">
         <Title order={3}>Аналитика</Title>
 
-        <Group>
-            {/* Выбор: Доход или Расход */}
+        <Group gap="xs">
             <SegmentedControl
+              size="xs"
               value={type}
               onChange={(val) => setType(val as any)}
               color={type === 'INCOME' ? 'teal' : 'red'}
@@ -74,37 +112,42 @@ export function ExpensesChart({ refreshTrigger }: Props) {
                 { label: 'Доходы', value: 'INCOME' },
               ]}
             />
-
             <Select
+                size="xs"
                 data={['BYN', 'USD', 'EUR']}
                 value={currency}
                 onChange={(val) => setCurrency(val || 'BYN')}
-                w={80}
+                w={70}
                 allowDeselect={false}
             />
         </Group>
       </Group>
 
-      {/* Период вынесли на новую строку для удобства на мобилках */}
-      <SegmentedControl
-        fullWidth
-        value={period}
-        onChange={setPeriod}
-        mb="lg"
-        data={[
-          { label: 'Сегодня', value: 'day' }, // <-- Новый фильтр
-          { label: 'Неделя', value: 'week' },
-          { label: 'Месяц', value: 'month' },
-          { label: 'Год', value: 'year' },
-        ]}
-      />
+      {/* Панель управления датами */}
+      <Group grow mb="lg">
+        <SegmentedControl
+          value={period}
+          onChange={(val) => {
+             setPeriod(val);
+             // При переключении режима сбрасываем на сегодня, чтобы не запутаться
+             setSelectedDate(new Date());
+          }}
+          data={[
+            { label: 'День', value: 'day' },
+            { label: 'Неделя', value: 'week' },
+            { label: 'Месяц', value: 'month' },
+            { label: 'Год', value: 'year' },
+          ]}
+        />
+        {renderDatePicker()}
+      </Group>
 
       {loading ? (
         <Center h={300}><Loader color="teal" /></Center>
       ) : chartData.length === 0 ? (
         <Center h={300}>
           <Text c="dimmed">
-            Нет {type === 'INCOME' ? 'доходов' : 'расходов'} за этот период
+            Нет данных за выбранный период
           </Text>
         </Center>
       ) : (
@@ -115,7 +158,7 @@ export function ExpensesChart({ refreshTrigger }: Props) {
                 data={chartData}
                 cx="50%"
                 cy="50%"
-                innerRadius={80} // Чуть тоньше пончик
+                innerRadius={80}
                 outerRadius={110}
                 paddingAngle={2}
                 dataKey="value"
@@ -129,7 +172,7 @@ export function ExpensesChart({ refreshTrigger }: Props) {
             </PieChart>
           </ResponsiveContainer>
 
-          <Center mt={-160} style={{ pointerEvents: 'none' }}> {/* Хак: текст внутри пончика */}
+          <Center mt={-160} style={{ pointerEvents: 'none' }}>
              <div style={{ textAlign: 'center' }}>
                <Text c="dimmed" size="xs">Итого</Text>
                <Text fw={700} size="xl" c={type === 'INCOME' ? 'teal' : 'red'}>
@@ -137,7 +180,7 @@ export function ExpensesChart({ refreshTrigger }: Props) {
                </Text>
              </div>
           </Center>
-          <div style={{ height: 100 }}></div> {/* Распорка, т.к. текст внутри */}
+          <div style={{ height: 100 }}></div>
         </div>
       )}
     </Paper>

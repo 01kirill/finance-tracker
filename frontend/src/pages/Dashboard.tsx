@@ -21,7 +21,7 @@ import { CreateCategoryModal } from '../components/CreateCategoryModal';
 import { CreateTransactionModal } from '../components/CreateTransactionModal';
 import { EditWalletModal } from '../components/EditWalletModal';
 import { EditCategoryModal } from '../components/EditCategoryModal';
-import { ExpensesChart } from '../components/ExpensesChart';
+import { AnalyticsChart } from '../components/AnalyticsChart.tsx';
 import { TotalBalance } from '../components/TotalBalance';
 
 export function Dashboard() {
@@ -166,7 +166,7 @@ export function Dashboard() {
           </Grid>
 
           {/* --- АНАЛИТИКА (ГРАФИК) --- */}
-          <ExpensesChart refreshTrigger={refreshKey} />
+          <AnalyticsChart refreshTrigger={refreshKey} />
 
           {/* --- КАТЕГОРИИ --- */}
           <Group justify="space-between" mb="lg" mt={40}>
