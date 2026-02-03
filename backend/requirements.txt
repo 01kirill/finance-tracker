@@ -12,3 +12,7 @@ celery
 redis
 requests
 django-redis
+pytest
+pytest-django
+pytest-mock
+model-bakery
