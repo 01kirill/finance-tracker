@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
-import { Paper, Title, SegmentedControl, Group, Text, Loader, Center, Select } from '@mantine/core';
-import { DateInput, MonthPickerInput, YearPickerInput } from '@mantine/dates'; // <-- Новые компоненты
+import {
+  Paper, Title, SegmentedControl, Group, Text, Loader, Center, Select, SimpleGrid
+} from '@mantine/core';
+import { DateInput, MonthPickerInput, YearPickerInput } from '@mantine/dates';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 import dayjs from 'dayjs';
 import 'dayjs/locale/ru';
@@ -19,12 +21,11 @@ interface Props {
 }
 
 export function AnalyticsChart({ refreshTrigger }: Props) {
-  const [period, setPeriod] = useState('month');
+  const [period, setPeriod] = useState('month'); // day | week | month | year
   const [currency, setCurrency] = useState<string>('BYN');
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
 
   const [selectedDate, setSelectedDate] = useState<Date | null>(new Date());
-
   const [data, setData] = useState<ExpenseStat[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -84,7 +85,7 @@ export function AnalyticsChart({ refreshTrigger }: Props) {
       placeholder: "Выберите дату",
       leftSection: <IconCalendar size={16} />,
       clearable: false,
-      style: { flex: 1 }
+      w: "100%"
     };
 
     if (period === 'year') {
@@ -123,13 +124,13 @@ export function AnalyticsChart({ refreshTrigger }: Props) {
         </Group>
       </Group>
 
-      {/* Панель управления датами */}
-      <Group grow mb="lg">
+      {/* Адаптивная сетка: На мобильных в столбик, на планшетах в строку */}
+      <SimpleGrid cols={{ base: 1, xs: 2 }} mb="lg">
         <SegmentedControl
+          fullWidth
           value={period}
           onChange={(val) => {
              setPeriod(val);
-             // При переключении режима сбрасываем на сегодня, чтобы не запутаться
              setSelectedDate(new Date());
           }}
           data={[
@@ -140,7 +141,7 @@ export function AnalyticsChart({ refreshTrigger }: Props) {
           ]}
         />
         {renderDatePicker()}
-      </Group>
+      </SimpleGrid>
 
       {loading ? (
         <Center h={300}><Loader color="teal" /></Center>
