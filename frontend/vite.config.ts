@@ -1,7 +1,9 @@
-import { defineConfig } from 'vite'
+/// <reference types="vitest" />
+import { defineConfig, mergeConfig } from 'vite'
+import { defineConfig as defineVitestConfig } from 'vitest/config'
 import react from '@vitejs/plugin-react'
 
-export default defineConfig({
+const viteConfig = defineConfig({
   plugins: [react()],
   server: {
     host: true,
@@ -12,5 +14,15 @@ export default defineConfig({
     watch: {
       usePolling: true,
     },
-  }
+  },
 })
+
+const vitestConfig = defineVitestConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: './src/setupTests.ts',
+  },
+})
+
+export default mergeConfig(viteConfig, vitestConfig)
