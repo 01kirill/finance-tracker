@@ -1,10 +1,7 @@
 # 💰 Finance Tracker
 
-> **Serious Pet Project:** Полнофункциональная система учета личных финансов с микросервисной архитектурой, асинхронной обработкой задач и интерактивной аналитикой.
+> **Pet Project:** Полнофункциональная система учета личных финансов с микросервисной архитектурой, асинхронной обработкой задач и интерактивной аналитикой.
 
-![Python](https://img.shields.io/badge/Python-3.12-blue?logo=python)
-![Django](https://img.shields.io/badge/Django-5.0-092E20?logo=django)
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker)
 ![Status](https://img.shields.io/badge/Status-MVP_v1.0-success)
 
@@ -139,7 +136,7 @@ make up
 | **Web App** | `http://localhost` | Основное приложение (React) |
 | **API Docs** | `http://localhost/api/docs/` | Swagger документация API |
 | **Admin Panel** | `http://localhost/admin/` | Админка Django |
-| **Mailhog** | `http://localhost:8025` | **СЮДА ПРИХОДЯТ ПИСЬМА** |
+| **Mailhog** | `http://localhost:8025` | ** локальный SMTP для имитации электронных писем** |
 
 ### Первый вход (Регистрация)
 1.  Перейдите на `http://localhost/register`.
