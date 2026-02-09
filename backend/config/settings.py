@@ -203,7 +203,7 @@ EMAIL_USE_TLS = False
 EMAIL_HOST_USER = ''
 EMAIL_HOST_PASSWORD = ''
 DEFAULT_FROM_EMAIL = 'info@finance-tracker.com'
-DOMAIN = 'localhost:5173'
+DOMAIN = 'localhost'
 SITE_NAME = 'Finance Tracker'
 
 CELERY_BEAT_SCHEDULE = {
